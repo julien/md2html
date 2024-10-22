@@ -74,9 +74,6 @@ func Test_Generate(t *testing.T) {
 			src := wd + string(os.PathSeparator) + testdir + string(os.PathSeparator) + tc.src
 			dst := wd + string(os.PathSeparator) + testdir + string(os.PathSeparator) + tc.dst
 
-			t.Log(src)
-			t.Log(dst)
-
 			defer func() {
 				if err := os.RemoveAll(dst); err != nil {
 					t.Fatal(err)
