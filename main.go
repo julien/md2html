@@ -11,7 +11,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("usage md2html <src directory> <dst directory>")
+		fmt.Println("usage: md2html <input> <output>")
 		os.Exit(1)
 	}
 
