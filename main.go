@@ -34,9 +34,9 @@ func run(ctx context.Context, args []string) error {
 		dst = args[2]
 	}
 
-	gen, err := internal.New()
+	gen, err := internal.Generator()
 	if err != nil {
 		return err
 	}
-	return gen.Generate(src, dst)
+	return gen.Run(src, dst)
 }

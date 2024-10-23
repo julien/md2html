@@ -8,7 +8,7 @@ import (
 	"github.com/julien/md2html/internal"
 )
 
-func Test_New(t *testing.T) {
+func Test_Generator(t *testing.T) {
 	tcs := []struct {
 		desc string
 		err  error
@@ -20,7 +20,7 @@ func Test_New(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			g, err := internal.New()
+			g, err := internal.Generator()
 			if err != tc.err {
 				t.Fatalf("got %v want: %v", err, tc.err)
 			}
@@ -31,7 +31,7 @@ func Test_New(t *testing.T) {
 	}
 }
 
-func Test_Generate(t *testing.T) {
+func Test_Run(t *testing.T) {
 	tcs := []struct {
 		desc string
 		src  string
@@ -59,7 +59,7 @@ func Test_Generate(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			g, err := internal.New()
+			g, err := internal.Generator()
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -90,7 +90,7 @@ func Test_Generate(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if err := g.Generate(abssrc, absdst); err != nil && !tc.fail {
+			if err := g.Run(abssrc, absdst); err != nil && !tc.fail {
 				t.Fatal(err)
 			}
 		})

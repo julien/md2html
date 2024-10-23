@@ -3,6 +3,7 @@ package internal
 import (
 	_ "embed"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -25,22 +26,58 @@ var (
 	repl         = strings.NewReplacer(md, ".html")
 )
 
-type Generator struct {
+type config struct {
+	src string
+	dir bool
+}
+
+func createConfig(src string) (config, error) {
+	abs, err := filepath.Abs(src)
+	if err != nil {
+		return config{}, err
+	}
+
+	info, err := os.Stat(abs)
+	if err != nil {
+		return config{}, err
+	}
+
+	return config{
+		src: abs,
+		dir: info.IsDir(),
+	}, nil
+}
+
+type generator struct {
 	tpl *template.Template
 }
 
-func New() (*Generator, error) {
+func Generator() (*generator, error) {
 	tpl, err := template.New("layout").Parse(layout)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Generator{
+	return &generator{
 		tpl: tpl,
 	}, nil
 }
 
-func (g *Generator) Generate(src, dst string) error {
+func (g *generator) Run(src, dst string) error {
+	cfg, err := createConfig(src)
+	if err != nil {
+		return err
+	}
+
+	if !cfg.dir {
+		name, err := g.writeFile(dst, cfg.src)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(os.Stdout, "wrote %s\n", name)
+		return nil
+	}
+
 	var (
 		fch, ech = g.find(src)
 		errs     = make([]error, 0)
@@ -58,10 +95,12 @@ loop:
 				continue
 			}
 
-			if _, err := g.writeFile(dst, f); err != nil {
+			name, err := g.writeFile(dst, f)
+			if err != nil {
 				errs = append(errs, err)
 				continue
 			}
+			fmt.Fprintf(os.Stdout, "wrote %s\n", name)
 		case e, ok := <-ech:
 			if !ok {
 				ech = nil
@@ -77,7 +116,7 @@ loop:
 	return errors.Join(errs...)
 }
 
-func (g *Generator) find(name string) (chan string, chan error) {
+func (g *generator) find(name string) (chan string, chan error) {
 	var (
 		sys = os.DirFS(name)
 		fch = make(chan string, 1)
@@ -121,7 +160,7 @@ func (g *Generator) find(name string) (chan string, chan error) {
 	return fch, ech
 }
 
-func (g *Generator) writeFile(dst, name string) (string, error) {
+func (g *generator) writeFile(dst, name string) (string, error) {
 	b, err := g.mdToHTML(name)
 	if err != nil {
 		return "", err
@@ -140,7 +179,7 @@ func (g *Generator) writeFile(dst, name string) (string, error) {
 		return "", err
 	}
 
-	out, err := os.Create(abs + string(os.PathSeparator) + 
+	out, err := os.Create(abs + string(os.PathSeparator) +
 		repl.Replace(filepath.Base(name)))
 	if err != nil {
 		return "", err
@@ -150,7 +189,7 @@ func (g *Generator) writeFile(dst, name string) (string, error) {
 	return out.Name(), g.tpl.Execute(out, template.HTML(b))
 }
 
-func (g *Generator) readFile(name string) ([]byte, error) {
+func (g *generator) readFile(name string) ([]byte, error) {
 	f, err := os.Open(name)
 	if err != nil {
 		return nil, err
@@ -164,7 +203,7 @@ func (g *Generator) readFile(name string) ([]byte, error) {
 	return b, nil
 }
 
-func (g *Generator) mdToHTML(name string) ([]byte, error) {
+func (g *generator) mdToHTML(name string) ([]byte, error) {
 	var (
 		p = parser.NewWithExtensions(parser.CommonExtensions | parser.NoEmptyLineBeforeBlock)
 		r = markdownhtml.NewRenderer(markdownhtml.RendererOptions{
