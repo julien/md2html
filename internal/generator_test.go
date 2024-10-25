@@ -8,29 +8,6 @@ import (
 	"github.com/julien/md2html/internal"
 )
 
-func Test_Generator(t *testing.T) {
-	tcs := []struct {
-		desc string
-		err  error
-	}{
-		{
-			desc: "returns a new instance",
-		},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			g, err := internal.Generator()
-			if err != tc.err {
-				t.Fatalf("got %v want: %v", err, tc.err)
-			}
-			if g == nil {
-				t.Fatalf("got nil, want a new instance")
-			}
-		})
-	}
-}
-
 func Test_Run(t *testing.T) {
 	tcs := []struct {
 		desc string
@@ -59,20 +36,16 @@ func Test_Run(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			g, err := internal.Generator()
-			if err != nil {
-				t.Fatal(err)
-			}
-
 			wd, err := os.Getwd()
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			testdir := "testdata"
-
-			src := wd + string(os.PathSeparator) + testdir + string(os.PathSeparator) + tc.src
-			dst := wd + string(os.PathSeparator) + testdir + string(os.PathSeparator) + tc.dst
+			var (
+				dir = "testdata"
+				src = wd + string(os.PathSeparator) + dir + string(os.PathSeparator) + tc.src
+				dst = wd + string(os.PathSeparator) + dir + string(os.PathSeparator) + tc.dst
+			)
 
 			defer func() {
 				if err := os.RemoveAll(dst); err != nil {
@@ -90,7 +63,7 @@ func Test_Run(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if err := g.Run(abssrc, absdst); err != nil && !tc.fail {
+			if err := internal.Run(abssrc, absdst); err != nil && !tc.fail {
 				t.Fatal(err)
 			}
 		})

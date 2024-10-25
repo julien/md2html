@@ -25,18 +25,11 @@ func run(ctx context.Context, args []string) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
-	var (
-		src = args[1]
-		dst = args[1]
-	)
+	src, dst := args[1], args[1]
 
 	if len(args) >= 3 {
 		dst = args[2]
 	}
 
-	gen, err := internal.Generator()
-	if err != nil {
-		return err
-	}
-	return gen.Run(src, dst)
+	return internal.Run(src, dst)
 }
