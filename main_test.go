@@ -1,11 +1,9 @@
-package internal_test
+package main
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/julien/md2html/internal"
 )
 
 func Test_Run(t *testing.T) {
@@ -63,7 +61,7 @@ func Test_Run(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if err := internal.Run(abssrc, absdst); err != nil && !tc.fail {
+			if err := Run(abssrc, absdst); err != nil && !tc.fail {
 				t.Fatal(err)
 			}
 		})
